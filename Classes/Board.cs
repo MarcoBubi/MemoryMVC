@@ -34,19 +34,18 @@ namespace MemoryMVC.Classes
 			NumberOfCards = cards;
 		}
 
-		public void InitializeBoard(int splitCardNumber, int numberOfCardPairs)
+		public void InitializeBoard(int numberOfCardPairs)
 		{
 			CardList = new List<Card>();
 			_CardValueList = new List<int>();
 
-			_SplitCardNumber = splitCardNumber;
-			_NumberOfCardPairs = numberOfCardPairs;
+			_NumberOfCardPairs = numberOfCardPairs / _SplitCardNumber;
 			_GenerateCardNumbers();
 			_CardValueList = _ShuffleList();
 			_CreateCardList();
 		}
 
-		public List<Card> GetShuffledCardList()
+		public List<Card> GetCardList()
 		{
 			return CardList;
 		}
@@ -55,6 +54,19 @@ namespace MemoryMVC.Classes
 		{
 			return CardList[position];
 		}
+
+		public bool ShouldDisplayCard(int cardSelected)
+		{
+			Card card = GetCardAtPosition(cardSelected);
+
+			if (card.CardStatus)
+			{
+				return false;
+			}
+			card.CardStatus = true;
+			return true;
+		}
+
 		#endregion
 		// ----------------------------------------------------------------------------------------------------------------------------------
 		#region Internal

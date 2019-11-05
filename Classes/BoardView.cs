@@ -38,9 +38,9 @@ namespace MemoryMVC.Framework
 
 		private void _Run()
 		{
-			_PrintCardList();
-			if (!_EndGame)
+			while (!_EndGame)
 			{
+				_PrintCardList();
 				_RegisterKeyInputs();
 			}
 			_ShouldRepeatGame();
@@ -94,74 +94,80 @@ namespace MemoryMVC.Framework
 
 		private void _RegisterKeyInputs()
 		{
-			double? positionModifier = null;
-			switch (Console.ReadKey(true).Key)
+			if (!_EndGame)
 			{
-				case ConsoleKey.Escape:
-					_GameController.EndGame(true);
-					break;
-				case ConsoleKey.LeftArrow:
-					positionModifier = -_HorizontalMovement;
-					break;
-				case ConsoleKey.A:
-					positionModifier = -_HorizontalMovement;
-					break;
-				case ConsoleKey.UpArrow:
-					positionModifier = -_VerticalMovement;
-					break;
-				case ConsoleKey.W:
-					positionModifier = -_VerticalMovement;
-					break;
-				case ConsoleKey.RightArrow:
-					positionModifier = _HorizontalMovement;
-					break;
-				case ConsoleKey.D:
-					positionModifier = _HorizontalMovement;
-					break;
-				case ConsoleKey.DownArrow:
-					positionModifier = _VerticalMovement;
-					break;
-				case ConsoleKey.S:
-					positionModifier = _VerticalMovement;
-					break;
-				case ConsoleKey.Enter:
-					_GameController.RevealCard(_ActivePosition);
-					break;
-				default:
-					_RegisterKeyInputs();
-					break;
+				double? positionModifier = null;
+				switch (Console.ReadKey(true).Key)
+				{
+					case ConsoleKey.Escape:
+						_EndGame = true;
+						break;
+					case ConsoleKey.LeftArrow:
+						positionModifier = -_HorizontalMovement;
+						break;
+					case ConsoleKey.A:
+						positionModifier = -_HorizontalMovement;
+						break;
+					case ConsoleKey.UpArrow:
+						positionModifier = -_VerticalMovement;
+						break;
+					case ConsoleKey.W:
+						positionModifier = -_VerticalMovement;
+						break;
+					case ConsoleKey.RightArrow:
+						positionModifier = _HorizontalMovement;
+						break;
+					case ConsoleKey.D:
+						positionModifier = _HorizontalMovement;
+						break;
+					case ConsoleKey.DownArrow:
+						positionModifier = _VerticalMovement;
+						break;
+					case ConsoleKey.S:
+						positionModifier = _VerticalMovement;
+						break;
+					case ConsoleKey.Enter:
+						_GameController.RevealCard(_ActivePosition);
+						break;
+					default:
+						_RegisterKeyInputs();
+						break;
+				}
+				if (positionModifier != null)
+				{
+					_ModifyPosition(positionModifier);
+				}
 			}
-			if (positionModifier != null)
-			{
-				_ModifyPosition(positionModifier);
-			}
-			_Run();
 		}
 
 		private void _PrintCardList(bool refreshValue = false)
 		{
-			Console.Clear();
-			bool activePosition = false;
-
-			List<Card> cardList = _GameController.GetCardList();
-
-			_DrawSpacesBetweenCards();
-			for (int i = 1; i <= cardList.Count; ++i)
+			if (!_EndGame)
 			{
-				activePosition = _ActivePosition == i - 1 ? true : false;
-				_DisplayCard(i - 1, activePosition);
+				Console.Clear();
+				bool activePosition = false;
 
-				if (i % _MaxRowNumbers == 0 && i != 0)
+				List<Card> cardList = _GameController.GetCardList();
+
+
+				_DrawSpacesBetweenCards();
+				for (int i = 1; i <= cardList.Count; ++i)
 				{
-					_DrawSpacesBetweenCards();
-				}
-			}
-			_DrawSpacesBetweenCards();
+					activePosition = _ActivePosition == i - 1 ? true : false;
+					_DisplayCard(cardList[i-1], activePosition);
 
-			if (_GameController.ClicksRegistered)
-			{
-				_GameController.CheckForPairs();
-				_EndGame = _GameController.WinCondition();
+					if (i % _MaxRowNumbers == 0 && i != 0)
+					{
+						_DrawSpacesBetweenCards();
+					}
+				}
+				_DrawSpacesBetweenCards();
+
+				if (_GameController.ShouldCheckForPairs)
+				{
+					_GameController.CheckForPairs();
+					_EndGame = _GameController.WinCondition();
+				}
 			}
 		}
 
@@ -197,11 +203,10 @@ namespace MemoryMVC.Framework
 			}
 		}
 
-		private void _DisplayCard(int cardPosition, bool activePosition = false)
+		private void _DisplayCard(Card card, bool activePosition = false)
 		{
 			string activePositionStar = " ";
 			string value = "X";
-			Card card = _GameController.GetCardAtPosition(cardPosition);
 
 			if (activePosition)
 			{

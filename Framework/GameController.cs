@@ -1,4 +1,4 @@
-﻿using MemoryMVC.Classes;
+using MemoryMVC.Classes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,10 +13,9 @@ namespace MemoryMVC.Framework
 
 		public Board Board;
 		public int NumberOfCards = 0;
-		public bool ClicksRegistered = false;
+		public bool ShouldCheckForPairs = false;
 
-		private readonly int _SplitCardNumber = 2;
-		private bool _ChangeTurn = false;
+		private bool _IsFirstCardSelected = false;
 		private int _FirstCardSelected = 0;
 		private int _SecondCardSelected = 0;
 
@@ -29,62 +28,47 @@ namespace MemoryMVC.Framework
 			Board = new Board(numberInput);
 
 			NumberOfCards = Board.NumberOfCards;
-			Board.InitializeBoard(_SplitCardNumber, (NumberOfCards / _SplitCardNumber));
+			Board.InitializeBoard(NumberOfCards);
 		}
 
 		public void RevealCard(int activePosition)
 		{
-			if (Board.GetShuffledCardList()[activePosition].CardStatus == false && !ClicksRegistered)
+			List<Card> cardList = GetCardList();
+
+			if (cardList[activePosition].CardStatus == false && !ShouldCheckForPairs)
 			{
-				if (!_ChangeTurn)
+				if (!_IsFirstCardSelected)
 				{
 					_FirstCardSelected = activePosition;
-					_ShouldDisplayCard(_FirstCardSelected, activePosition, true);
+					_IsFirstCardSelected = Board.ShouldDisplayCard(_FirstCardSelected);
 				}
 				else
 				{
 					_SecondCardSelected = activePosition;
-					_ShouldDisplayCard(_SecondCardSelected, activePosition, false);
-					ClicksRegistered = true;
+					ShouldCheckForPairs = Board.ShouldDisplayCard(_SecondCardSelected);
 				}
 			}
 		}
 
-		public void EndGame(bool endGame = false)
-		{
-			if (endGame)
-			{
-				Environment.Exit(0);
-			}
-		}
-
-		#endregion
-		// ----------------------------------------------------------------------------------------------------------------------------------
-		#region Internal
-
-		private void _ShouldDisplayCard(int cardSelected, int activePosition, bool changeTurn = false)
-		{
-			Board.GetCardAtPosition(cardSelected).CardStatus = true;
-			cardSelected = activePosition;
-			_ChangeTurn = changeTurn;
-		}
-
 		public void CheckForPairs()
 		{
+			List<Card> cardList = GetCardList();
 
-			if (Board.GetCardAtPosition(_FirstCardSelected).CardValue != Board.GetCardAtPosition(_SecondCardSelected).CardValue)
+			if (cardList[_FirstCardSelected].CardValue != cardList[_SecondCardSelected].CardValue)
 			{
-				Board.GetCardAtPosition(_FirstCardSelected).CardStatus = false;
-				Board.GetCardAtPosition(_SecondCardSelected).CardStatus = false;
+				cardList[_FirstCardSelected].CardStatus = false;
+				cardList[_SecondCardSelected].CardStatus = false;
 			}
-			ClicksRegistered = false;
+			_IsFirstCardSelected = false;
+			ShouldCheckForPairs = false;
 		}
 
 		public bool WinCondition()
 		{
 			bool winConditionMet = true;
+			List<Card> cardList = GetCardList();
 
-			foreach (var card in Board.GetShuffledCardList())
+			foreach (var card in cardList)
 			{
 				if (!card.CardStatus)
 				{
@@ -96,12 +80,7 @@ namespace MemoryMVC.Framework
 
 		public List<Card> GetCardList()
 		{
-			return Board.GetShuffledCardList();
-		}
-
-		public Card GetCardAtPosition(int cardPosition)
-		{
-			return Board.GetCardAtPosition(cardPosition);
+			return Board.GetCardList();
 		}
 
 		#endregion
